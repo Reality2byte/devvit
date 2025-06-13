@@ -15,6 +15,11 @@ const sidebars = {
   tutorialSidebar: [
     {
       type: 'doc',
+      label: "⚡️ The World's Largest Hackathon",
+      id: 'bolt-hackathon',
+    },
+    {
+      type: 'doc',
       label: 'Introduction',
       id: 'introduction',
     },
@@ -119,7 +124,11 @@ const sidebars = {
         'capabilities/adding-links',
         'capabilities/cache',
         'capabilities/forms',
-        'capabilities/http-fetch',
+        {
+          type: 'category',
+          label: 'HTTP fetch',
+          items: ['capabilities/http-fetch', 'capabilities/http-fetch-allowlist'],
+        },
         'capabilities/image-uploads',
         'capabilities/menu-actions',
         'capabilities/redis',

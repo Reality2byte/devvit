@@ -85,6 +85,22 @@ const config = {
         indexBlog: false,
       },
     ],
+    [
+      require.resolve('./plugins/llmsTxt.js'),
+      {
+        ignore: [
+          '**/api/**',
+          '**/changelog.md',
+          '**/icon.mdx',
+          '**/devvit_rules.md',
+          '**/migration_guide.md',
+          '**/three_strikes.md',
+          '**/playgrounds.mdx',
+          '**/playground.md',
+        ],
+      },
+    ],
+    require.resolve('./plugins/copyDocsRaw'),
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
@@ -113,13 +129,25 @@ const config = {
       footer: {
         links: [
           {
-            title: 'More Resources',
-            items: [
-              {
-                label: 'Go to r/Devvit',
-                href: 'https://www.reddit.com/r/devvit',
-              },
-            ],
+            label: 'Blog',
+            to: '/blog',
+          },
+          {
+            label: 'The Reddit Developer Fund',
+            to: '/reddit_developer_funds',
+          },
+
+          {
+            label: 'r/Devvit',
+            href: 'https://www.reddit.com/r/devvit',
+          },
+          {
+            label: 'r/GamesOnReddit',
+            href: 'https://www.reddit.com/r/GamesOnReddit',
+          },
+          {
+            label: 'Join our Discord',
+            href: 'https://discord.gg/Cd43ExtEFS',
           },
         ],
         style: 'dark',

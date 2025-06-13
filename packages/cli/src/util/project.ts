@@ -11,6 +11,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ProjectRootDir } from '@devvit/build-pack/lib/BuildPack.js';
 import type { JSONValue } from '@devvit/shared-types/json.js';
 import {
+  apiPathPrefix,
   type AppConfig,
   type AppPermissionConfig,
   type AppPostConfig,
@@ -22,6 +23,12 @@ import path from 'path';
 import { findUpDirContaining, isFile } from './file-util.js';
 import { dumpJsonToYaml, readYamlToJson } from './files.js';
 import { type DevvitPackageConfig, readPackageJSON } from './package-managers/package-util.js';
+
+/**
+ * Whether the user may be building code while evaluating the project config
+ * (playtest). Used as a hueristic on when to print which errors.
+ */
+export type BuildMode = 'Dynamic' | 'Static';
 
 /** @deprecated Use AppConfig. */
 export type ClassicAppConfig = {
@@ -41,10 +48,10 @@ export class Project {
    * @arg root Project root directory.
    * @arg filename Project config filename.
    */
-  static async new(root: string, filename: string): Promise<Project> {
+  static async new(root: string, filename: string, mode: BuildMode): Promise<Project> {
     const config = await readConfig(root, filename);
     if (isAppConfig(config)) {
-      const errs = validateConfig(config, existsSync);
+      const errs = validateConfig(config, existsSync, mode);
       if (errs.length) throw Error(errs.join('; '));
     }
     let packageJSON;
@@ -123,13 +130,16 @@ export class Project {
  *
  * @arg filename Optional config filename override (usually CLI flag).
  */
-export async function newProject(filename: string | undefined): Promise<Project | undefined> {
+export async function newProject(
+  filename: string | undefined,
+  mode: BuildMode
+): Promise<Project | undefined> {
   filename ||= (await findUpDirContaining(devvitV1ConfigFilename))
     ? devvitV1ConfigFilename
     : devvitClassicConfigFilename;
 
   const root = await findUpDirContaining(filename);
-  if (root) return await Project.new(root, filename);
+  if (root) return await Project.new(root, filename, mode);
 }
 
 /** @internal */
@@ -170,7 +180,8 @@ async function readConfig(root: string, filename: string): Promise<DevvitConfig>
 /** @internal; */
 export function validateConfig(
   config: Readonly<AppConfig>,
-  fileExists: (filename: string) => boolean
+  fileExists: (filename: string) => boolean,
+  mode: BuildMode
 ): string[] {
   const errs = [];
 
@@ -182,10 +193,12 @@ export function validateConfig(
   }
 
   if (config.post) {
-    if (!fileExists(config.post.client.dir))
+    if (!fileExists(config.post.client.dir) && mode === 'Static')
       errs.push(`\`config.post.client.dir\` (${config.post.client.dir}) does not exist`);
 
-    if (!fileExists(config.post.client.entry))
+    if (config.post.client.entry.startsWith(apiPathPrefix) || mode === 'Dynamic') {
+      // URL path or user is rebuilding regularly during playtest.
+    } else if (!fileExists(config.post.client.entry))
       errs.push(`\`config.post.client.entry\` (${config.post.client.entry}) does not exist`);
     else {
       const dir = path.resolve(config.post.client.dir);
@@ -197,7 +210,7 @@ export function validateConfig(
     }
   }
 
-  if (config.server && !fileExists(config.server.entry))
+  if (config.server && !fileExists(config.server.entry) && mode === 'Static')
     errs.push(`\`config.server.entry\` (${config.server.entry}) does not exist`);
 
   return errs;
