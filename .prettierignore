@@ -5,6 +5,7 @@ server/bin/
 
 # Generated and formatted by Go.
 /docs/spec/headers.md
+/docs/spec/redditapi-security.md
 /AGENTS.md
 
 node_modules/
