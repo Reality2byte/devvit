@@ -337,6 +337,9 @@ export function devvit(opts: DevvitPluginOptions = {}): Plugin {
               outDir: serverOutDir,
               minify: true,
               copyPublicDir: false,
+              commonjsOptions: {
+                ignoreDynamicRequires: true,
+              },
               rollupOptions: {
                 onwarn(warning: RollupLog, warn: LoggingFunction) {
                   if (shouldSuppressWarning(warning)) return;
